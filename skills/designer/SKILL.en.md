@@ -6,9 +6,9 @@ description: >-
   Figma MCP) generates/changes a UI, or when the request is to improve, redesign,
   polish, review the look, refine layout/UI/UX, build screens/components, or
   evaluate the aesthetics. Removes "AI aesthetic slop" (generic purple/blue
-  gradients, over-rounded corners, colossal padding, heavy shadows, Inter/Roboto
-  everywhere, predictable symmetric layout) while respecting the existing design
-  system instead of imposing a generic look. Triggers on: "improve the visuals",
+  gradients, glassmorphism, gradient text, over-rounded corners, colossal padding,
+  heavy shadows, Inter/Roboto everywhere, predictable symmetric layout) while
+  respecting the existing design system instead of imposing a generic look. Triggers on: "improve the visuals",
   "redesign", "make it pretty", "polish the UI", "review the design", "it looks
   generic / AI-made", "remove the slop".
 ---
@@ -68,8 +68,13 @@ node skills/designer/scripts/audit.mjs [files...]
 It groups by **severity** (`error` > `warning` > `info`) and gives a `SLOP
 SCORE` (bands: 0 clean · 1–9 minor · 10–24 noticeable · 25+ heavy). `info`
 severity (e.g. `rounded-full` on an avatar) is a note, not an error — it doesn't
-inflate the score. Add this to a manual read against `references/anti-slop.en.md`.
-**Record the initial score**: it must drop in phase 5.
+inflate the score. It also runs an **accessibility** check as a **separate**
+category (not part of the SLOP SCORE). Add this to a manual read against
+`references/anti-slop.en.md`. **Record the initial score**: it must drop in phase 5.
+
+> `SLOP SCORE: 0` means **no regex-detectable tells remain** — it does not certify
+> the composition (layout, rhythm, information architecture). That is the job of
+> the manual review with the catalog and the dials.
 
 ### 3. Calibrate the three controls
 
@@ -81,11 +86,13 @@ architectural decisions**, they are not decoration (details in
 |------|-----------|----------------------------------|
 | `DESIGN_VARIANCE` | **> 4** | Bans the default centered hero; imposes asymmetry, split-screen or radical left alignment. |
 | `MOTION_INTENSITY` | **> 5** | Requires continuous micro-animations and refined loading transitions. |
-| `VISUAL_DENSITY` | **> 7** | Removes generic rounded cards/containers; uses thin dividers, subtle lines and whitespace. |
+| `VISUAL_DENSITY` | **> 7** | Removes decorative containers (each box earns its weight); thin dividers, subtle lines and whitespace. |
+| `EXPRESSION_RESTRAINT` | **> 6** | Max 1 meaningful accent color + 2 font families; hierarchy via weight/size/case, never an extra color or effect. |
 
 Pick values coherent with the domain. E.g.: dense operational tool → high
-`VISUAL_DENSITY`; brand landing → high `DESIGN_VARIANCE`. **Announce the chosen
-values** to the user before applying.
+`VISUAL_DENSITY` and `EXPRESSION_RESTRAINT`; brand landing → high
+`DESIGN_VARIANCE`, low `RESTRAINT`. **Announce the chosen values** to the user
+before applying.
 
 ### 4. Execution (minimal, token-driven)
 
@@ -111,6 +118,9 @@ identity): see `references/shadcn-tailwind-anti-slop.en.md`.
 ### 5. Verification
 
 - Run the auditor again: the slop score should **drop** versus phase 2.
+- **No accessibility `error` may remain** (img without alt, focus removed without
+  `:focus-visible`, etc.) — this is a gate, independent of the SLOP SCORE. In CI:
+  `audit.mjs --fail-on-a11y`.
 - Confirm 4.5:1 contrast on the text pairs you touched.
 - Run whatever the project defines (`npm test`, `npm run build`, smoke) before
   considering it done. No new console regression.
@@ -162,6 +172,7 @@ The task is complete only when **all** hold:
 
 - [ ] Reconnaissance done: you know which tokens/fonts/themes the project uses.
 - [ ] Final `SLOP SCORE` **lower** than the initial one (ideally no `error`).
+- [ ] **Zero accessibility `error`** in the auditor (`--fail-on-a11y` passes).
 - [ ] Every new color/radius/space came from a project token (no loose hex).
 - [ ] Contrast ≥ 4.5:1 on touched text; visible focus; complete states.
 - [ ] Project tests/build pass, with no new console regression.

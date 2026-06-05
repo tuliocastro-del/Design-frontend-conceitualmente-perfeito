@@ -81,9 +81,15 @@ Script Node independente (Node 18+), sem dependências:
 ```bash
 node skills/designer/scripts/audit.mjs [arquivos ou pastas...]   # texto
 node skills/designer/scripts/audit.mjs --format json .           # JSON
-node skills/designer/scripts/audit.mjs --fail-on-score 20 .      # gate de CI
+node skills/designer/scripts/audit.mjs --fail-on-score 20 .      # gate de CI (slop)
+node skills/designer/scripts/audit.mjs --fail-on-a11y .          # gate de CI (a11y)
 node skills/designer/scripts/audit.mjs --help                    # ajuda
 ```
+
+Além do slop estético, ele roda uma checagem de **acessibilidade** determinística
+(categoria **separada**, não entra no SLOP SCORE): `img` sem `alt`, `outline:none`
+sem `:focus-visible`, movimento sem `prefers-reduced-motion`, `onClick` em elemento
+não-interativo.
 
 **Como interpretar o score** (`error` > `warning` > `info`):
 
@@ -96,7 +102,8 @@ node skills/designer/scripts/audit.mjs --help                    # ajuda
 
 É **diagnóstico, não veredito**: sai com código `0` por padrão. Use `--fail-on-score N`
 só quando quiser um portão de CI. Severidade `info` (ex.: `rounded-full` em avatar)
-**não** infla o score.
+**não** infla o score. E **`score 0` não certifica a composição** — significa apenas
+que não há indício detectável por regex; layout/ritmo/IA são revisão manual.
 
 ## Usando com cada provedor
 

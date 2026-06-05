@@ -31,9 +31,10 @@ breathing room only where it separates distinct blocks of meaning.
 
 ## 4. Heavy / stacked shadows
 
-**Symptom:** `shadow-2xl`, multiple `box-shadow` summed, dark shadows on a light
-background.
-**Why it's slop:** exaggerated elevation looks like a template and degrades rendering.
+**Symptom:** `shadow-2xl`, `shadow-[0_35px_60px_...]`, multiple `box-shadow`
+summed, dark shadows on a light background.
+**Why it's slop:** exaggerated, uniform elevation looks like a template —
+everything "floats" the same and hierarchy disappears.
 **Fix:** a subtle elevation system (1–3 levels). In dark/dense UI, a thin
 `1px` border often communicates separation better than a shadow.
 
@@ -41,10 +42,13 @@ background.
 
 **Symptom:** Inter (or Roboto) for title, body, label, number — everything.
 **Why it's slop:** zero personality; impossible to tell the brand apart.
-**Fix:** a **planned pairing** of fonts. A display font with character for titles
-(at a weight/size that creates contrast), a neutral readable one for body, mono
-for data/code. Reference example (Anthropic brand guidelines): Poppins for titles
-(min. 24pt), Lora for body.
+**Fix:** a **planned pairing** of fonts. A display font with character for titles,
+a neutral readable one for body, mono for data/code. "With character" is concrete:
+distinctive letterforms, a real weight range, and **outside the default set** that
+generators repeat (Inter, Roboto, Open Sans, Lato, Poppins, Montserrat). Hierarchy
+comes from **weight/size/case**, not color or an effect. Typographic-palette example
+(Anthropic brand guidelines): a display face for titles (min. 24pt) + a readable
+serif for body.
 
 ## 6. Hardcoded hex ignoring the design system
 
@@ -67,6 +71,54 @@ readable, never chaotic.
 **Symptom:** "Get Started" + rocket icon + ✨ emoji on everything.
 **Fix:** domain-specific copy; coherent iconography (one family, one weight).
 Less decorative emoji.
+
+> Patterns 1–8 are the classics. 9–13 are the 2025/2026 generation of "AI look"
+> (the v0/Lovable/Claude house style) — today's dominant tells.
+
+## 9. Glassmorphism / `backdrop-blur` everywhere
+
+**Symptom:** `backdrop-filter: blur()`, `backdrop-blur-xl`, translucent cards and
+navbars stacked over a blurred/gradient background.
+**Why it's slop:** it became the #1 tell of 2025; it often fails contrast and
+flattens hierarchy (everything "floats" alike).
+**Fix:** an opaque surface with an elevation token. Glass only where something
+meaningful sits behind it (e.g. a bar over scrolling content), once, with measured
+contrast. Never as the default texture of every surface. *(The auditor detects this.)*
+
+## 10. Gradient text (`bg-clip-text` / `text-transparent`)
+
+**Symptom:** `bg-gradient-to-r … bg-clip-text text-transparent` on the heading; a
+purple→pink rainbow title.
+**Why it's slop:** a one-line effect that screams "AI-generated"; it almost always
+fails contrast and doesn't scale to hierarchy.
+**Fix:** hierarchy via typography (weight/size/family), not a fill trick. A solid
+accent color on *one* keyword, if anything. *(The auditor detects this.)*
+
+## 11. Emoji as feature icon / heading bullet
+
+**Symptom:** "🚀 Fast", "🔒 Secure", "✨ Magic" in headings and cards.
+**Why it's slop:** a generator placeholder; inconsistent across platforms, no shared
+weight/grid, becomes noise.
+**Fix:** one coherent icon family (one weight, one grid) OR no icon. Reserve emoji
+for user content, never as UI chrome.
+
+## 12. Generic bento grid (a false friend of variance)
+
+**Symptom:** a grid of rounded tiles in alternating sizes, each with icon + title +
+sentence.
+**Why it's slop:** it looks "bold" and even passes the asymmetry test, but it's the
+v0/21st.dev default — decorative variance, not informational.
+**Fix:** layout should follow the *relative importance* of content, not a fixed
+mosaic. If the tiles carry the same semantic weight, don't use a bento.
+
+## 13. Perfect uniformity (the absence of intentional irregularity)
+
+**Symptom:** identical gaps, identical card heights, three identical cards, always a
+centered `max-w-7xl mx-auto` container, every block on the same rhythm.
+**Why it's slop:** human design has hierarchy → it has purposeful irregularity.
+Total regularity is the fingerprint of the model's statistical average.
+**Fix:** give different weights to things of different importance; vary container
+width per section; break the 3-card row when one item is the primary one.
 
 ## Reference institutional colors (Anthropic example)
 

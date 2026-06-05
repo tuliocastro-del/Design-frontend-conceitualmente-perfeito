@@ -1,0 +1,2 @@
+:root{--a:#fff;--b:#000;--accent:#d97757}
+.x{color:var(--accent,#ffffff)}

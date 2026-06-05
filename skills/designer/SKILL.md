@@ -6,9 +6,10 @@ description: >-
   Dyad, v0, screenshot-to-code, Figma MCP) gerar/alterar uma UI, ou quando o
   pedido for melhorar, redesenhar, polir, revisar a aparência, refinar
   layout/UI/UX, criar telas/componentes ou avaliar a estética. Remove o "slop
-  estético de IA" (gradientes roxo/azul genéricos, cantos arredondados demais,
-  padding colossal, sombras pesadas, Inter/Roboto em tudo, layout simétrico
-  previsível) respeitando o design system existente em vez de impor um visual
+  estético de IA" (gradientes roxo/azul genéricos, glassmorphism, texto em
+  gradiente, cantos arredondados demais, padding colossal, sombras pesadas,
+  Inter/Roboto em tudo, layout simétrico previsível) respeitando o design system
+  existente em vez de impor um visual
   genérico. Aciona por: "melhora o visual", "redesign", "deixa bonito", "polir a
   UI", "revisar o design", "ficou genérico/cara de IA", "tira o slop".
 ---
@@ -68,8 +69,13 @@ node skills/designer/scripts/audit.mjs [arquivos...]
 Ele classifica por **severidade** (`error` > `warning` > `info`) e dá um
 `SLOP SCORE` (faixas: 0 limpo · 1–9 menor · 10–24 perceptível · 25+ pesado).
 Severidade `info` (ex.: `rounded-full` em avatar) é nota, não erro — não infla o
-score. Some isso à leitura manual contra `references/anti-slop.md`. **Anote o
-score inicial**: ele precisa cair na fase 5.
+score. Ele também roda uma checagem de **acessibilidade** como categoria
+**separada** (não entra no SLOP SCORE). Some isso à leitura manual contra
+`references/anti-slop.md`. **Anote o score inicial**: ele precisa cair na fase 5.
+
+> `SLOP SCORE: 0` significa que **não sobrou indício detectável por regex** — não
+> certifica a composição (layout, ritmo, arquitetura de informação). Isso é
+> trabalho da revisão manual com o catálogo e os diais.
 
 ### 3. Calibração dos três controles
 
@@ -81,11 +87,13 @@ Defina três diais (0–10) a partir do briefing e do contexto do produto. Eles
 |------|--------|----------------------------------------------|
 | `DESIGN_VARIANCE` | **> 4** | Proíbe hero centralizado padrão; impõe assimetria, split-screen ou alinhamento radical à esquerda. |
 | `MOTION_INTENSITY` | **> 5** | Exige micro-animações contínuas e transições de carregamento refinadas. |
-| `VISUAL_DENSITY` | **> 7** | Remove cards/contêineres arredondados genéricos; usa divisórias finas, linhas sutis e espaço em branco. |
+| `VISUAL_DENSITY` | **> 7** | Remove contêineres decorativos (cada caixa justifica seu peso); divisórias finas, linhas sutis e espaço em branco. |
+| `EXPRESSION_RESTRAINT` | **> 6** | Máx. 1 cor de acento com significado + 2 famílias de fonte; hierarquia por peso/tamanho/caixa, nunca por cor extra ou efeito. |
 
 Escolha valores coerentes com o domínio. Ex.: ferramenta operacional/densa →
-`VISUAL_DENSITY` alto; landing de marca → `DESIGN_VARIANCE` alto. **Anuncie os
-valores escolhidos** ao usuário antes de aplicar.
+`VISUAL_DENSITY` e `EXPRESSION_RESTRAINT` altos; landing de marca →
+`DESIGN_VARIANCE` alto, `RESTRAINT` baixo. **Anuncie os valores escolhidos** ao
+usuário antes de aplicar.
 
 ### 4. Execução (mínima, orientada por tokens)
 
@@ -111,6 +119,9 @@ identidade): ver `references/shadcn-tailwind-anti-slop.md`.
 ### 5. Verificação
 
 - Rode o auditor de novo: a pontuação de slop deve **cair** em relação à fase 2.
+- **Nenhum `error` de acessibilidade pode permanecer** (img sem alt, foco removido
+  sem `:focus-visible`, etc.) — isso é portão, independente do SLOP SCORE. Em CI:
+  `audit.mjs --fail-on-a11y`.
 - Confirme contraste 4.5:1 nos pares de texto que você tocou.
 - Rode o que o projeto define (`npm test`, `npm run build`, smoke) antes de
   considerar concluído. Sem regressão de console nova.
@@ -162,6 +173,7 @@ A tarefa só está concluída quando **todos** valem:
 
 - [ ] Reconhecimento feito: você sabe quais tokens/fontes/temas o projeto usa.
 - [ ] `SLOP SCORE` final **menor** que o inicial (idealmente sem `error`).
+- [ ] **Zero `error` de acessibilidade** no auditor (`--fail-on-a11y` passa).
 - [ ] Toda cor/raio/espaço novo veio de token do projeto (nada de hex solto).
 - [ ] Contraste ≥ 4.5:1 nos textos tocados; foco visível; estados completos.
 - [ ] Testes/build do projeto passam, sem regressão nova de console.

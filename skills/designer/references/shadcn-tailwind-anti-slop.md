@@ -64,6 +64,14 @@ shadcn vem neutro de propósito — **você** define a personalidade.
 emoji decorativo. Em produto real, rótulos são específicos ("Abrir log da missão",
 não "Get Started").
 
+## Nota sobre o auditor neste stack
+
+- Ele **pega valores arbitrários**: `rounded-[2rem]`, `shadow-[0_35px_60px_…]` e
+  gradientes off-palette (`from-fuchsia-500 to-rose-500`) são detectados.
+- Ele **não** varre hex hardcoded dentro de `.tsx`/`.jsx` (ex.:
+  `style={{ color: '#6366f1' }}`) nem literais Tailwind crus de cor (`text-slate-500`,
+  `bg-[#6366f1]`). Isso é revisão manual — prefira tokens semânticos do shadcn.
+
 ## Checklist rápido para um projeto shadcn/Tailwind
 
 - [ ] `--radius` e a paleta foram **customizados** (não estão no default)?
