@@ -1,0 +1,12 @@
+/* The project HAS tokens (the :root block), yet a value is hardcoded outside
+   them. The hardcoded usage should be flagged (info, weight 1); the token
+   definition should not. */
+:root {
+  --text: #1f2937;
+  --accent: #d97757;
+}
+
+.label {
+  color: #ff00aa; /* should be var(--accent) — flagged */
+  border: 1px solid var(--text);
+}

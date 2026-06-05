@@ -1,0 +1,28 @@
+{
+  "name": "design-frontend-conceitualmente-perfeito",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "AI frontend design quality layer: anti-slop auditor + agent skill to remove generic AI aesthetics, respect the design system and make UI intentional.",
+  "license": "MIT",
+  "bin": {
+    "anti-slop-audit": "skills/designer/scripts/audit.mjs"
+  },
+  "scripts": {
+    "audit": "node skills/designer/scripts/audit.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "keywords": [
+    "ai-slop",
+    "design-system",
+    "frontend",
+    "accessibility",
+    "ai-agents",
+    "claude-code",
+    "tailwindcss",
+    "shadcn-ui"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

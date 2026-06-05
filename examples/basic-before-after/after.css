@@ -1,0 +1,35 @@
+/* AFTER — same card, made intentional. Uses the project tokens, a display/body
+   font pairing, a short radius scale, dense padding tied to hierarchy, and a
+   single subtle elevation level (a 1px border does most of the work). High
+   VISUAL_DENSITY: a dashboard card, not a marketing hero. */
+:root {
+  --accent: #d97757;
+  --bg: #141413;
+  --fg: #faf9f5;
+  --line: #2a2a28;
+  --radius-sm: 4px;
+  --space-3: 12px;
+  --space-4: 16px;
+}
+
+body {
+  /* body stays neutral and readable */
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.card {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent); /* status accent, used sparingly */
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-3);
+}
+
+.card__title {
+  /* display font with character carries the hierarchy, not size alone */
+  font-family: "Oswald", system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}

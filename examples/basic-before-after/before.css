@@ -1,0 +1,26 @@
+/* BEFORE — typical AI slop for a "mission operations" dashboard card.
+   Purple/blue gradient, Inter everywhere, huge radius, colossal padding,
+   stacked shadows. Looks "modern" but generic and low-density. */
+:root {
+  /* tokens exist, but the code below ignores them */
+  --accent: #d97757;
+  --bg: #141413;
+  --fg: #faf9f5;
+}
+
+body {
+  font-family: Inter, sans-serif;
+}
+
+.card {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border-radius: 32px;
+  padding: 96px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.2), 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.card__title {
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+}
