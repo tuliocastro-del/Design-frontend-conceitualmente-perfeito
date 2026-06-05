@@ -105,12 +105,15 @@ node skills/designer/scripts/audit.mjs                 # varre o projeto inteiro
 node skills/designer/scripts/audit.mjs src/ui.css      # arquivos/pastas específicos
 node skills/designer/scripts/audit.mjs --format json . # saída JSON (parseável)
 node skills/designer/scripts/audit.mjs --fail-on-score 20 .  # gate de CI (exit 1 se score > 20)
+node skills/designer/scripts/audit.mjs --fail-on-a11y .      # gate de CI (exit 1 se houver erro de a11y)
 node skills/designer/scripts/audit.mjs --help          # ajuda completa
 ```
 
 Saída: lista de indícios agrupados por regra, com **severidade**
 (`error`/`warning`/`info`), e um `SLOP SCORE` final (faixas: 0 limpo · 1–9 menor ·
-10–24 perceptível · 25+ pesado). Use **antes** (diagnóstico) e **depois**
+10–24 perceptível · 25+ pesado). Há também uma seção de **acessibilidade**
+(categoria separada, fora do SLOP SCORE). Use **antes** (diagnóstico) e **depois**
 (verificação) — a pontuação deve cair. Por padrão sai com código `0` (é
-diagnóstico, não um portão de CI); use `--fail-on-score N` quando quiser falhar
-um pipeline. Severidade `info` (ex.: `rounded-full` em avatar) não infla o score.
+diagnóstico, não um portão de CI); use `--fail-on-score N`/`--fail-on-a11y` quando
+quiser falhar um pipeline. Severidade `info` (ex.: `rounded-full` em avatar) não
+infla o score.

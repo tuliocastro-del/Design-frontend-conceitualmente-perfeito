@@ -16,6 +16,11 @@ node ../../skills/designer/scripts/audit.mjs after.css
 
 ### Score: `18` (noticeable) → `0` (clean)
 
+> **What score 0 means (and doesn't):** it means no regex-detectable tells remain.
+> It does **not** certify the composition — a genuinely sloppy layout can also score
+> 0. The auditor is necessary, not sufficient; the dials and the manual catalog do
+> the real work.
+
 ### Auditor — before (`before.css`)
 
 ```text
@@ -57,6 +62,11 @@ restrained accent — not by gradients and shadows.
 ## 🇧🇷 Português
 
 ### Score: `18` (noticeable) → `0` (clean)
+
+> **O que score 0 significa (e o que não):** significa que não sobrou indício
+> detectável por regex. **Não** certifica a composição — um layout genuinamente
+> sloppy também pode pontuar 0. O auditor é necessário, não suficiente; os diais e
+> o catálogo manual fazem o trabalho de verdade.
 
 O mesmo card de dashboard, gerado com slop típico de IA e depois tornado
 intencional. A saída do auditor acima é **real** — reproduza com os comandos no

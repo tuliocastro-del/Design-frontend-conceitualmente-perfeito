@@ -1,0 +1,3 @@
+/* scroll-padding must NOT be flagged as colossal padding; the real padding must. */
+.scroller { scroll-padding: 80px; }
+.hero { padding: 64px; }

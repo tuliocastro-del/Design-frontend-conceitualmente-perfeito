@@ -103,12 +103,14 @@ node skills/designer/scripts/audit.mjs                 # scans the whole project
 node skills/designer/scripts/audit.mjs src/ui.css      # specific files/folders
 node skills/designer/scripts/audit.mjs --format json . # JSON output (parseable)
 node skills/designer/scripts/audit.mjs --fail-on-score 20 .  # CI gate (exit 1 if score > 20)
+node skills/designer/scripts/audit.mjs --fail-on-a11y .      # CI gate (exit 1 if any a11y error)
 node skills/designer/scripts/audit.mjs --help          # full help
 ```
 
 Output: findings grouped by rule with **severity** (`error`/`warning`/`info`)
 and a final `SLOP SCORE` (bands: 0 clean · 1–9 minor · 10–24 noticeable · 25+
-heavy). Use it **before** (diagnosis) and **after** (verification) — the score
-should drop. By default it exits with code `0` (it's a diagnostic, not a CI
-gate); use `--fail-on-score N` when you want to fail a pipeline. `info` severity
-(e.g. `rounded-full` on an avatar) does not inflate the score.
+heavy). There's also an **accessibility** section (a separate category, outside
+the SLOP SCORE). Use it **before** (diagnosis) and **after** (verification) — the
+score should drop. By default it exits with code `0` (it's a diagnostic, not a CI
+gate); use `--fail-on-score N`/`--fail-on-a11y` when you want to fail a pipeline.
+`info` severity (e.g. `rounded-full` on an avatar) does not inflate the score.

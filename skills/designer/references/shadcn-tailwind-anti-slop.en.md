@@ -64,6 +64,14 @@ use it on titles; keep `font-sans` for body.
 emoji. In a real product, labels are specific ("Open mission log", not "Get
 Started").
 
+## Note on the auditor in this stack
+
+- It **does catch arbitrary values**: `rounded-[2rem]`, `shadow-[0_35px_60px_…]`
+  and off-palette gradients (`from-fuchsia-500 to-rose-500`) are detected.
+- It does **not** scan hardcoded hex inside `.tsx`/`.jsx` (e.g.
+  `style={{ color: '#6366f1' }}`) or raw Tailwind color literals (`text-slate-500`,
+  `bg-[#6366f1]`). That's manual review — prefer shadcn's semantic tokens.
+
 ## Quick checklist for a shadcn/Tailwind project
 
 - [ ] Are `--radius` and the palette **customized** (not the default)?

@@ -30,9 +30,10 @@ UI densa/operacional → cantos quase retos. Pills só onde fazem sentido
 
 ## 4. Sombras pesadas / empilhadas
 
-**Sintoma:** `shadow-2xl`, múltiplas `box-shadow` somadas, sombras escuras em
-fundo claro.
-**Por quê é slop:** elevação exagerada parece template e degrada renderização.
+**Sintoma:** `shadow-2xl`, `shadow-[0_35px_60px_...]`, múltiplas `box-shadow`
+somadas, sombras escuras em fundo claro.
+**Por quê é slop:** elevação exagerada e uniforme parece template — tudo
+"flutua" igual e a hierarquia some.
 **Correção:** sistema de elevação sutil (1–3 níveis). Em UI escura/densa,
 muitas vezes uma borda fina (`1px`) comunica separação melhor que sombra.
 
@@ -41,9 +42,12 @@ muitas vezes uma borda fina (`1px`) comunica separação melhor que sombra.
 **Sintoma:** Inter (ou Roboto) para título, corpo, label, número — tudo.
 **Por quê é slop:** zero personalidade; impossível distinguir a marca.
 **Correção:** **acoplamento planejado** de fontes. Uma display com caráter
-para títulos (≥ peso/tamanho que crie contraste), uma neutra legível para corpo,
-mono para dados/código. Exemplo de referência (Anthropic brand-guidelines):
-Poppins em títulos (mín. 24pt), Lora no corpo.
+para títulos, uma neutra legível para corpo, mono para dados/código.
+"Com caráter" é concreto: formas de letra distintivas, uma faixa real de pesos,
+e **fora do conjunto-padrão** que os geradores repetem (Inter, Roboto, Open Sans,
+Lato, Poppins, Montserrat). A hierarquia vem de **peso/tamanho/caixa**, não de cor
+ou efeito. Exemplo de paleta tipográfica (Anthropic brand-guidelines): display em
+títulos (mín. 24pt) + serifada legível no corpo.
 
 ## 6. Hex hardcoded ignorando o design system
 
@@ -66,6 +70,55 @@ quebra de grid com propósito. Sempre legível, nunca caótico.
 **Sintoma:** "Get Started" + ícone de foguete + emoji ✨ em tudo.
 **Correção:** copy específica do domínio; iconografia coerente (uma família, um
 peso). Menos emoji decorativo.
+
+> Os padrões 1–8 são os clássicos. Os de 9–13 são a geração 2025/2026 de "cara de
+> IA" (v0/Lovable/Claude house style) — hoje os tells dominantes.
+
+## 9. Glassmorphism / `backdrop-blur` por toda parte
+
+**Sintoma:** `backdrop-filter: blur()`, `backdrop-blur-xl`, cards e navbar
+translúcidos empilhados sobre um fundo borrado/gradiente.
+**Por quê é slop:** virou a assinatura nº 1 de 2025; costuma falhar em contraste e
+some a hierarquia (tudo "flutua" igual).
+**Correção:** superfície opaca com token de elevação. Vidro só onde há de fato algo
+significativo atrás (ex.: barra sobre conteúdo que rola), uma vez, com contraste
+medido. Nunca como textura padrão de toda superfície. *(O auditor detecta.)*
+
+## 10. Texto em gradiente (`bg-clip-text` / `text-transparent`)
+
+**Sintoma:** `bg-gradient-to-r … bg-clip-text text-transparent` no título; manchete
+arco-íris roxo→rosa.
+**Por quê é slop:** efeito de uma linha que grita "gerado por IA"; quase sempre
+falha contraste e não escala pra hierarquia.
+**Correção:** hierarquia por tipografia (peso/tamanho/família), não por truque de
+preenchimento. Cor de acento sólida em *uma* palavra-chave, se for o caso.
+*(O auditor detecta.)*
+
+## 11. Emoji como ícone de feature / bullet de heading
+
+**Sintoma:** "🚀 Rápido", "🔒 Seguro", "✨ Mágico" em headings e cards.
+**Por quê é slop:** placeholder de gerador; inconsistente entre plataformas, sem
+peso/grade comum, vira ruído.
+**Correção:** uma família de ícones coerente (um peso, uma grade) OU sem ícone.
+Reserve emoji para conteúdo do usuário, nunca como cromo de UI.
+
+## 12. Bento grid genérico (falso amigo da variância)
+
+**Sintoma:** grade de tiles arredondados de tamanhos alternados, cada um com ícone
++ título + frase.
+**Por quê é slop:** parece "ousado" e até passa no teste de assimetria, mas é o
+default de v0/21st.dev — variância decorativa, não informacional.
+**Correção:** o layout deve seguir a *importância relativa* do conteúdo, não um
+mosaico fixo. Se os tiles têm o mesmo peso semântico, não use bento.
+
+## 13. Uniformidade perfeita (ausência de irregularidade intencional)
+
+**Sintoma:** gaps idênticos, cards de altura idêntica, três cards sempre iguais,
+container sempre `max-w-7xl mx-auto` centralizado, todo bloco no mesmo ritmo.
+**Por quê é slop:** design humano tem hierarquia → tem irregularidade proposital. A
+regularidade total é a impressão digital da média estatística do modelo.
+**Correção:** dê pesos diferentes a coisas de importância diferente; varie a largura
+de container por seção; quebre a fileira de 3 quando um item for o principal.
 
 ## Cores institucionais de referência (exemplo Anthropic)
 
