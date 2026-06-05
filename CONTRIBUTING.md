@@ -28,8 +28,9 @@ aconteceu.
    (arquivos `*.en.md`), e vice-versa.
 2. **Sem dados sensíveis:** este repo é público — nunca inclua nomes, e-mails
    reais, segredos ou conteúdo de projetos privados nos exemplos.
-3. **Teste o auditor:** se mexer no `audit.mjs`, rode-o em pelo menos um projeto
-   real e confirme que não gera falso positivo (`node skills/designer/scripts/audit.mjs`).
+3. **Teste o auditor:** se mexer no `audit.mjs`, rode `npm test` (deve passar) e
+   adicione/atualize um fixture em `tests/fixtures/` cobrindo a mudança. Confirme
+   que não gera falso positivo em código comum (`npm run audit -- .`).
 4. **Pull requests** com descrição clara do quê e do porquê. Mudança só de
    documentação pode ser direta; mudança de comportamento da skill, explique o
    raciocínio.
@@ -60,7 +61,8 @@ reporting what happened.
    (`*.en.md` files), and vice versa.
 2. **No sensitive data:** this repo is public — never include real names, emails,
    secrets, or private project content in examples.
-3. **Test the auditor:** if you touch `audit.mjs`, run it on at least one real
-   project and confirm it produces no false positives.
+3. **Test the auditor:** if you touch `audit.mjs`, run `npm test` (must pass) and
+   add/update a fixture in `tests/fixtures/` covering the change. Confirm it
+   produces no false positives on normal code (`npm run audit -- .`).
 4. **Pull requests** with a clear description of what and why. Docs-only changes
    can be direct; behavior changes to the skill, explain the reasoning.

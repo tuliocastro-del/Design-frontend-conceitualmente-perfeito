@@ -1,0 +1,28 @@
+/* Intentional, token-driven CSS. No slop. Should score 0. */
+:root {
+  --bg: #141413;
+  --fg: #faf9f5;
+  --accent: #d97757;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+}
+
+.panel {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.title {
+  font-family: "Oswald", system-ui, sans-serif;
+  font-weight: 600;
+}
+
+.body {
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}

@@ -2,83 +2,139 @@
 
 [🇧🇷 Português](README.md) · **🇺🇸 English**
 
-An **AI skill** that turns any language model into a **senior product designer**
-— one that actually improves interfaces by fighting *"AI aesthetic slop"*: the
-generic look that gives away an AI-generated screen (purple/blue gradients,
-over-rounded corners, colossal padding, heavy shadows, and Inter/Roboto everywhere).
+> **This is not another AI app builder. It is the design-quality layer you run
+> _after_ AI generates the UI — to remove generic AI slop, respect the existing
+> design system, and make the interface feel intentional.**
 
-> **Master principle:** *respect before imposing.* The skill detects the design
-> system that already exists in the project (tokens, themes, fonts, spacing
-> scale) and works **within** it, instead of slapping a generic look on top.
+An **AI skill + deterministic anti-slop auditor** that turns any language model
+into a **senior frontend design reviewer**. Generate the UI with whatever tool
+you like (Claude Code, Cursor, Copilot, Bolt, Lovable, Dyad, v0,
+screenshot-to-code, Figma MCP…); then run this layer to strip *"AI aesthetic
+slop"*: purple/blue gradients, over-rounded corners, colossal padding, heavy
+shadows, Inter/Roboto everywhere, and predictable symmetric layout.
 
-This repository is **public and collaborative**: the goal is to keep improving
-the skill by testing it with **multiple AI models and providers** (Claude, GPT,
-Gemini, etc.), not just one.
+## What it is / what it is not
 
----
+| It is | It is not |
+|-------|-----------|
+| A post-generation **design quality/QA layer** | An app generator/builder |
+| A **deterministic** slop auditor (Node, zero deps) | An AI model or hosted product |
+| A **provider-agnostic** skill (Claude, GPT, Gemini, Cursor…) | Locked to one provider |
+| A discipline that **respects the design system** | A generic theme slapped on top |
+
+## Why it exists
+
+AI generators produce working code but converge on the same generic look — easy
+to recognize as "AI-made". They rely on the model "having good taste". This
+project swaps taste for **process**: recognize the existing system, diagnose with
+an auditor, calibrate dials, execute via tokens, and verify — with accessibility
+as the floor.
+
+## In 60 seconds
+
+```bash
+# 1. clone/download this repo, then run the auditor on any frontend:
+node skills/designer/scripts/audit.mjs path/to/project
+#    → lists each finding (file:line + severity) and a SLOP SCORE
+
+# 2. install the skill into your agent (e.g. Claude Code):
+mkdir -p .claude/skills && cp -r skills/designer .claude/skills/designer
+
+# 3. in a frontend project, ask: "this looks AI-made, remove the slop".
+#    The skill runs the 5 phases and the auditor on its own.
+```
 
 ## What's here
 
 ```
 skills/designer/
-├── SKILL.md            # The skill (PT-BR) — main "designer" instruction
-├── SKILL.en.md         # The skill (English)
-├── references/         # Supporting docs the skill consults
-│   ├── anti-slop.md            / anti-slop.en.md            # catalog of patterns to avoid
-│   ├── controles-numericos.md  / numeric-controls.en.md     # the 3 design "dials"
-│   └── checklist-acessibilidade.md / accessibility-checklist.en.md
-└── scripts/
-    └── audit.mjs       # Deterministic auditor: measures "slop" by file+line
-docs/
-├── uso-por-provedor.md         # How to use in each AI tool (PT-BR)
-└── usage-by-provider.en.md     # English version
+├── SKILL.md / SKILL.en.md          # The skill — 5-phase flow (PT/EN)
+├── references/                     # Supporting docs the skill consults
+│   ├── design-system-reconhecimento / design-system-recognition.en
+│   ├── anti-slop / anti-slop.en                 # catalog of patterns to avoid
+│   ├── controles-numericos / numeric-controls.en  # the 3 design "dials"
+│   ├── shadcn-tailwind-anti-slop / .en          # Tailwind/shadcn pitfalls
+│   ├── checklist-acessibilidade / accessibility-checklist.en
+│   └── benchmark-geradores-ia / ai-builder-benchmark.en  # post-generation flow
+└── scripts/audit.mjs               # Deterministic auditor (slop by file+line)
+docs/        # usage-by-provider.en.md (+ PT) — how to use in each AI tool
+examples/    # real before/after with auditor output
+tests/       # auditor tests (node:test) + fixtures
 ```
 
 ## How the skill works (summary)
 
-The skill enforces a **5-phase flow**, in order:
+A mandatory **5-phase flow**, in order:
 
 1. **Reconnaissance** — maps the existing design system before touching anything.
-2. **Diagnosis** — runs the auditor (`audit.mjs`) that scores the "slop".
+2. **Diagnosis** — runs `audit.mjs` and records the `SLOP SCORE`.
 3. **Calibration** — sets 3 dials (`0–10`) that force architectural decisions:
-   - `DESIGN_VARIANCE` (how far off-pattern the composition goes)
-   - `MOTION_INTENSITY` (how much life/animation)
-   - `VISUAL_DENSITY` (how much content per screen)
-4. **Execution** — applies changes always via the project's tokens (typography,
+   `DESIGN_VARIANCE`, `MOTION_INTENSITY`, `VISUAL_DENSITY`.
+4. **Execution** — **minimal** change, always via tokens (typography,
    color/contrast ≥ 4.5:1, scaled spacing, complete states, accessibility).
 5. **Verification** — runs the auditor again (the score should drop) + project tests.
 
-## Quick start
+## The auditor
 
-### With Claude Code
-
-Copy the skill folder into your project:
+A standalone Node script (Node 18+), no dependencies:
 
 ```bash
-mkdir -p .claude/skills
-cp -r skills/designer .claude/skills/designer
+node skills/designer/scripts/audit.mjs [files or folders...]   # text
+node skills/designer/scripts/audit.mjs --format json .         # JSON
+node skills/designer/scripts/audit.mjs --fail-on-score 20 .    # CI gate
+node skills/designer/scripts/audit.mjs --help                  # help
 ```
 
-Then, in a frontend project, ask something like *"improve the look of this
-screen"* or *"this looks AI-made, redesign it"* and the skill triggers on its own.
+**How to read the score** (`error` > `warning` > `info`):
 
-### With other providers (GPT, Gemini, Cursor, Copilot…)
+| Score | Band | Reading |
+|------:|------|---------|
+| `0` | clean | no slop patterns detected |
+| `1–9` | minor | few signals, usually `info`/`warning` |
+| `10–24` | noticeable | visible slop; worth the skill pass |
+| `25+` | heavy | template-like; redesign the visual layer |
 
-The skill is essentially a **system prompt + reference docs + a Node script**.
-It works in any tool. See the full guide:
-**[docs/usage-by-provider.en.md](docs/usage-by-provider.en.md)**.
+It's a **diagnostic, not a verdict**: exits with code `0` by default. Use
+`--fail-on-score N` only when you want a CI gate. `info` severity (e.g.
+`rounded-full` on an avatar) does **not** inflate the score.
 
-### Running just the auditor (no AI)
+## Using it with each provider
 
-The auditor is a standalone Node script — useful in any project:
+The skill is essentially a **system prompt + reference docs + a Node script** —
+it runs in any tool. Full guide: **[docs/usage-by-provider.en.md](docs/usage-by-provider.en.md)**.
+
+- **Claude Code:** copy `skills/designer` into `.claude/skills/` — triggers on its own.
+- **Cursor:** paste `SKILL.en.md` into `.cursor/rules/designer.mdc`.
+- **GitHub Copilot:** paste into `.github/copilot-instructions.md`.
+- **ChatGPT/GPT, Gemini, Codex, any LLM:** `SKILL.en.md` as the system
+  instruction + `references/` as context; run the auditor and paste the output.
+
+## After generating with Bolt / Lovable / Dyad / screenshot-to-code
+
+Generate with the tool → run the auditor → apply the anti-slop pass → run the
+auditor again. Per-tool recipe in
+`skills/designer/references/ai-builder-benchmark.en.md`.
+
+## Examples
+
+[`examples/basic-before-after/`](examples/basic-before-after/) — a dashboard card
+that goes from `SLOP SCORE: 18` to `0`, with the real auditor output and the
+design decisions explained.
+
+## Running the tests
 
 ```bash
-node skills/designer/scripts/audit.mjs [files or folders...]
-# no args: scans the whole project (css, html, js/jsx, ts/tsx, vue, svelte)
+npm test          # node --test tests/*.test.mjs
+npm run audit -- .
 ```
 
-It prints each "slop" finding (file + line + rule) and a final `SLOP SCORE`.
-The higher it is, the more "AI-made". Requires Node.js 18+.
+## Short roadmap
+
+- **v0.2 (here):** auditor with JSON/severity/`--fail-on-score`, tests, CI,
+  examples, new references.
+- **v0.3:** more before/after examples (dense dashboard, landing, form) and screenshots.
+- **v0.4:** token detection in `theme.ts`/JSON, inline suppressions, multi-model benchmark.
+- **v1.0:** npm package (`npx anti-slop-audit`), GitHub Action and a design-review MCP.
 
 ## Contributing
 

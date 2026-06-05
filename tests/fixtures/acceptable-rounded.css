@@ -1,0 +1,22 @@
+/* Pills and circles are intentional (avatars, badges, toggles, buttons with a
+   small radius). These should be noted as info (weight 0) and NOT destroy the
+   score. Should score 0. */
+.avatar {
+  border-radius: 9999px;
+}
+
+.badge {
+  border-radius: 50%;
+}
+
+.toggle {
+  border-radius: 999px;
+}
+
+.button {
+  border-radius: 6px;
+}
+
+.input {
+  border-radius: 4px;
+}

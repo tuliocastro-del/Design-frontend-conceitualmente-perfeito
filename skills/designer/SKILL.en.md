@@ -1,31 +1,37 @@
 ---
 name: designer
 description: >-
-  Senior frontend designer that improves any interface by fighting "AI aesthetic
-  slop" (generic purple/blue gradients, over-rounded corners, colossal padding,
-  heavy shadows, Inter/Roboto fonts everywhere). Use when the request involves
-  improving, redesigning, polishing, reviewing the look, refining layout/UI/UX,
-  creating screens/components, or evaluating the aesthetics of a frontend.
-  Detects the existing design system and respects its tokens instead of imposing
-  a generic look. Triggers on: "improve the visuals", "redesign", "make it
-  pretty", "polish the UI", "review the design", "it looks generic / AI-made".
+  Design-quality layer for AI-generated or AI-edited frontend. Use AFTER any tool
+  (Claude Code, Cursor, Copilot, Bolt, Lovable, Dyad, v0, screenshot-to-code,
+  Figma MCP) generates/changes a UI, or when the request is to improve, redesign,
+  polish, review the look, refine layout/UI/UX, build screens/components, or
+  evaluate the aesthetics. Removes "AI aesthetic slop" (generic purple/blue
+  gradients, over-rounded corners, colossal padding, heavy shadows, Inter/Roboto
+  everywhere, predictable symmetric layout) while respecting the existing design
+  system instead of imposing a generic look. Triggers on: "improve the visuals",
+  "redesign", "make it pretty", "polish the UI", "review the design", "it looks
+  generic / AI-made", "remove the slop".
 ---
 
-# Designer — frontend improvement without AI slop
+# Designer — anti-slop quality layer for AI-generated UI
 
-You act as a **senior product designer**. Your job is NOT to "make it pretty" in
-the generic sense — it's to give an interface **identity, density and intent**,
-removing the repetitive visual pattern that betrays AI generation.
+This is **not** a UI generator. It is the **quality layer** you run after the UI
+already exists — written by you, by another AI, or by a human. Your job is to
+give the interface **identity, density and intent**, removing the repetitive
+visual pattern that betrays AI generation — without rewriting what is already good.
 
 > Master principle: **respect before imposing.** Almost every project already has
 > a design system (tokens, themes, fonts, spacing scale). Detect it and work
 > *within* it. Only propose a new system when none exists.
 
-## When this skill triggers
+## When to use / when not to use
 
-Requests like "improve the frontend", "redesign this screen", "it looks
-AI-made", "give it a polish", "review the design/UI/UX", "build this component
-nicely".
+**Use when:** the request is to improve/review/redesign a UI; a tool just
+generated a screen/component; the user says "it looks AI-made"; or you're
+auditing the visual quality of a frontend.
+
+**Don't use for:** generating the app from scratch (use your generator of choice,
+*then* this skill), backend logic, or changes that don't touch the visual layer.
 
 ## Mandatory flow (5 phases)
 
@@ -34,15 +40,16 @@ improvement from slop.
 
 ### 1. Reconnaissance (understand what already exists)
 
-Before touching a single pixel, map the current design system:
+Before touching a single pixel, map the current design system. Details and
+heuristics in `references/design-system-recognition.en.md`.
 
 - Look for tokens/variables: `:root`, `--color-*`, `[data-theme]`,
-  `tailwind.config`, `theme.ts`, design tokens in JSON.
+  `tailwind.config`, `theme.ts`, `components.json` (shadcn), design tokens in JSON.
 - Identify: fonts (display/body/mono), color scale, spacing scale (4px? 8px?),
   radii, shadows, themes (light/dark/variants).
-- Read what the project documentation declares as **fixed/immutable** (e.g. a
-  repo may pin "Oswald + IBM Plex" and a set of themes in `docs/ARCHITECTURE.md`;
-  respect it).
+- Read what the project documentation declares as **fixed/immutable** (official
+  tokens, institutional fonts, supported themes, brand guidelines, accessibility
+  constraints). If present, respect it to the letter.
 
 If there is a system, **you inherit its vocabulary**. Never introduce a loose hex
 when `var(--accent)` exists.
@@ -54,12 +61,15 @@ Run the deterministic auditor to find slop patterns by file+line:
 ```bash
 node skills/designer/scripts/audit.mjs [files...]
 # Installed in Claude Code: node .claude/skills/designer/scripts/audit.mjs
-# no args: scans the project's *.css, *.html, *.js/jsx, *.ts/tsx
+# JSON to parse:  node skills/designer/scripts/audit.mjs --format json .
+# Full help:      node skills/designer/scripts/audit.mjs --help
 ```
 
-It scores and locates: purple↔blue gradients, `rounded-2xl/3xl`, colossal
-padding, stacked shadows, Inter/Roboto as the only family, hardcoded hex where
-tokens exist. Add this to a manual read against `references/anti-slop.en.md`.
+It groups by **severity** (`error` > `warning` > `info`) and gives a `SLOP
+SCORE` (bands: 0 clean · 1–9 minor · 10–24 noticeable · 25+ heavy). `info`
+severity (e.g. `rounded-full` on an avatar) is a note, not an error — it doesn't
+inflate the score. Add this to a manual read against `references/anti-slop.en.md`.
+**Record the initial score**: it must drop in phase 5.
 
 ### 3. Calibrate the three controls
 
@@ -77,9 +87,11 @@ Pick values coherent with the domain. E.g.: dense operational tool → high
 `VISUAL_DENSITY`; brand landing → high `DESIGN_VARIANCE`. **Announce the chosen
 values** to the user before applying.
 
-### 4. Execution
+### 4. Execution (minimal, token-driven)
 
-Apply incremental changes, always via the project's tokens:
+Apply **incremental**, surgical changes, always via the project's tokens. **Don't
+rewrite what already respects the system** — touch only what the diagnosis
+flagged (see "Scope" below).
 
 - **Typography first.** Clear hierarchy, a display font with personality for
   titles, readable body. Never the same generic font across every layer.
@@ -92,20 +104,35 @@ Apply incremental changes, always via the project's tokens:
 - **Accessibility.** Visible focus, targets ≥ 44px, `prefers-reduced-motion`,
   semantics. See `references/accessibility-checklist.en.md`.
 
+In **Tailwind/shadcn/CSS-modules/Figma-derived** projects there are specific
+pitfalls (e.g. a repeated `rounded-lg border bg-card p-6 shadow-sm` with no
+identity): see `references/shadcn-tailwind-anti-slop.en.md`.
+
 ### 5. Verification
 
-- Run the auditor again: the slop score should **drop**.
+- Run the auditor again: the slop score should **drop** versus phase 2.
 - Confirm 4.5:1 contrast on the text pairs you touched.
 - Run whatever the project defines (`npm test`, `npm run build`, smoke) before
   considering it done. No new console regression.
 
+## Scope — don't rewrite everything
+
+The default is **the smallest change that removes the slop**, not a full redesign.
+
+- Change only what the diagnosis + the dials justify. Code that already uses
+  tokens and passes the rules: **leave it alone**.
+- Prefer adjusting existing tokens/classes over creating new ones. Only create a
+  new token when a canonical one is missing.
+- A ground-up redesign happens only when the user explicitly asks, or when no
+  design system exists at all.
+
 ## Anti-slop rules (core)
 
-Summary of what to **never** do (full catalog in `references/anti-slop.md`):
+Summary of what to **never** do (full catalog in `references/anti-slop.en.md`):
 
 1. **No purple/blue gradient** on a white background as a "theme". It's AI's #1 signature.
 2. **No `rounded-2xl`/`rounded-3xl` by default.** Radius is a decision, not a reflex.
-   In dense UI, prefer near-straight corners.
+   In dense UI, prefer near-straight corners. (`rounded-full` on an avatar/pill is fine.)
 3. **No colossal padding** that destroys screen density. Space serves hierarchy,
    not emptiness.
 4. **No stacking heavy shadows.** Elevation is subtle; dense shadow degrades
@@ -127,10 +154,25 @@ When you (or the request) try to skip a phase, these counterarguments hold:
 | "Micro-animation is fluff, leave it for later." | If `MOTION_INTENSITY > 5`, motion is a brief requirement, not an extra. |
 | "This project doesn't care about accessibility." | Focus/contrast/keyboard are the floor, not decoration. They always apply. |
 | "Inter works, it's a clean font." | "Clean" = no identity. Titles need a font with personality. |
+| "While I'm here, I'll redesign the whole screen." | Minimal scope. Touch only what the diagnosis flagged. |
+
+## "Done" criteria
+
+The task is complete only when **all** hold:
+
+- [ ] Reconnaissance done: you know which tokens/fonts/themes the project uses.
+- [ ] Final `SLOP SCORE` **lower** than the initial one (ideally no `error`).
+- [ ] Every new color/radius/space came from a project token (no loose hex).
+- [ ] Contrast ≥ 4.5:1 on touched text; visible focus; complete states.
+- [ ] Project tests/build pass, with no new console regression.
+- [ ] The diff is minimal and justifiable — nothing rewritten without reason.
 
 ## Resources
 
+- `references/design-system-recognition.en.md` — how to detect tokens/fonts/themes (phase 1).
 - `references/anti-slop.en.md` — detailed catalog of patterns to avoid + fixes.
 - `references/numeric-controls.en.md` — how to calibrate the three dials per product type.
+- `references/shadcn-tailwind-anti-slop.en.md` — pitfalls in Tailwind/shadcn/CSS-modules.
 - `references/accessibility-checklist.en.md` — contrast, focus, keyboard, motion, semantics.
-- `scripts/audit.mjs` — deterministic slop auditor (file + line + score).
+- `references/ai-builder-benchmark.en.md` — post-generation flow per tool (Bolt, Lovable, etc.).
+- `scripts/audit.mjs` — deterministic slop auditor (file + line + severity + score; `--format json`, `--fail-on-score`).

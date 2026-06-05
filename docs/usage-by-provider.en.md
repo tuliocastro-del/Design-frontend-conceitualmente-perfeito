@@ -64,6 +64,13 @@ follows the design flow. The auditor runs in the terminal as usual.
 - **Gemini Code Assist (IDE):** use the project rules/context file and paste
   `SKILL.en.md`.
 
+## Codex / Codex CLI (OpenAI)
+
+- Add `SKILL.en.md` as the agent's instruction (e.g. `AGENTS.md` at the repo
+  root, or whatever instructions file your Codex uses). Ask it to consult the
+  `references/` in the phase where they're needed.
+- The auditor runs in the agent's terminal like any Node command.
+
 ## Any other LLM (Llama, Mistral, DeepSeek, etc.)
 
 The pattern is always the same:
@@ -75,16 +82,33 @@ The pattern is always the same:
 
 ---
 
+## Post-generation: Bolt / open-lovable / Dyad / v0 / screenshot-to-code
+
+These tools **generate** the UI; this skill comes **after**. Flow:
+
+1. Generate/export the code to disk (or clone the tool's project).
+2. `node skills/designer/scripts/audit.mjs --format json .` → record the score.
+3. Run the 5-phase flow from `SKILL.en.md` (reconnaissance → minimal execution).
+4. Run the auditor again → the score should drop.
+
+Detailed per-tool recipe:
+`skills/designer/references/ai-builder-benchmark.en.md`.
+
 ## About the auditor (`audit.mjs`)
 
 AI-independent — just Node.js 18+:
 
 ```bash
-node skills/designer/scripts/audit.mjs            # scans the whole project
-node skills/designer/scripts/audit.mjs src/ui.css # specific files/folders
+node skills/designer/scripts/audit.mjs                 # scans the whole project
+node skills/designer/scripts/audit.mjs src/ui.css      # specific files/folders
+node skills/designer/scripts/audit.mjs --format json . # JSON output (parseable)
+node skills/designer/scripts/audit.mjs --fail-on-score 20 .  # CI gate (exit 1 if score > 20)
+node skills/designer/scripts/audit.mjs --help          # full help
 ```
 
-Output: a list of findings (file:line + rule + snippet) and a final `SLOP SCORE`.
-Use it **before** (diagnosis) and **after** (verification) — the score should
-drop. It always exits with code `0` (it's a diagnostic, not a CI gate), so the
-AI decides what to do with the result.
+Output: findings grouped by rule with **severity** (`error`/`warning`/`info`)
+and a final `SLOP SCORE` (bands: 0 clean · 1–9 minor · 10–24 noticeable · 25+
+heavy). Use it **before** (diagnosis) and **after** (verification) — the score
+should drop. By default it exits with code `0` (it's a diagnostic, not a CI
+gate); use `--fail-on-score N` when you want to fail a pipeline. `info` severity
+(e.g. `rounded-full` on an avatar) does not inflate the score.

@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Run tests
+        run: npm test
+      - name: Auditor smoke (self-scan, diagnostic only)
+        run: npm run audit -- .
+      - name: Auditor detects the slop fixture
+        run: node skills/designer/scripts/audit.mjs --fail-on-score 0 tests/fixtures/obvious-slop.css && exit 1 || echo "expected non-zero (slop detected) — ok"

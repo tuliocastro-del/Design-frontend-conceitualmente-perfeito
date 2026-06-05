@@ -66,6 +66,13 @@ a seguir o fluxo de design. O auditor roda no terminal normalmente.
 - **Gemini Code Assist (IDE):** use o arquivo de regras/contexto do projeto e
   cole o `SKILL.md`.
 
+## Codex / Codex CLI (OpenAI)
+
+- Adicione o `SKILL.md` como instrução do agente (ex.: `AGENTS.md` na raiz do
+  repo, ou o arquivo de instruções que o seu Codex usa). Peça para ele consultar
+  os `references/` na fase em que forem necessários.
+- O auditor roda no terminal do agente como qualquer comando Node.
+
 ## Qualquer outro LLM (Llama, Mistral, DeepSeek, etc.)
 
 O padrão é sempre o mesmo:
@@ -77,16 +84,33 @@ O padrão é sempre o mesmo:
 
 ---
 
+## Pós-geração: Bolt / open-lovable / Dyad / v0 / screenshot-to-code
+
+Estas ferramentas **geram** a UI; esta skill entra **depois**. Fluxo:
+
+1. Gere/exporte o código para o disco (ou clone o projeto da ferramenta).
+2. `node skills/designer/scripts/audit.mjs --format json .` → anote o score.
+3. Rode o fluxo de 5 fases do `SKILL.md` (reconhecimento → execução mínima).
+4. Rode o auditor de novo → o score deve cair.
+
+Receita detalhada por ferramenta:
+`skills/designer/references/benchmark-geradores-ia.md`.
+
 ## Sobre o auditor (`audit.mjs`)
 
 Independe de IA — é só Node.js 18+:
 
 ```bash
-node skills/designer/scripts/audit.mjs            # varre o projeto inteiro
-node skills/designer/scripts/audit.mjs src/ui.css # arquivos/pastas específicos
+node skills/designer/scripts/audit.mjs                 # varre o projeto inteiro
+node skills/designer/scripts/audit.mjs src/ui.css      # arquivos/pastas específicos
+node skills/designer/scripts/audit.mjs --format json . # saída JSON (parseável)
+node skills/designer/scripts/audit.mjs --fail-on-score 20 .  # gate de CI (exit 1 se score > 20)
+node skills/designer/scripts/audit.mjs --help          # ajuda completa
 ```
 
-Saída: lista de indícios (arquivo:linha + regra + trecho) e um `SLOP SCORE`
-final. Use **antes** (diagnóstico) e **depois** (verificação) — a pontuação deve
-cair. Ele sempre sai com código `0` (é diagnóstico, não um portão de CI), então
-a IA decide o que fazer com o resultado.
+Saída: lista de indícios agrupados por regra, com **severidade**
+(`error`/`warning`/`info`), e um `SLOP SCORE` final (faixas: 0 limpo · 1–9 menor ·
+10–24 perceptível · 25+ pesado). Use **antes** (diagnóstico) e **depois**
+(verificação) — a pontuação deve cair. Por padrão sai com código `0` (é
+diagnóstico, não um portão de CI); use `--fail-on-score N` quando quiser falhar
+um pipeline. Severidade `info` (ex.: `rounded-full` em avatar) não infla o score.

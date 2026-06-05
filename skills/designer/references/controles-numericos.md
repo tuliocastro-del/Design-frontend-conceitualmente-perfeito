@@ -29,7 +29,7 @@ de aplicar. Acima do limiar, o comportamento deixa de ser opcional.
 - **> 7 (gatilho):** **remove cards/contêineres arredondados genéricos**. Usa
   **divisórias finas, linhas sutis e espaço em branco** para separar — não caixas.
   Bom para ferramentas operacionais, tabelas, painéis com muita informação
-  simultânea (ex.: este projeto, Sala de Guerra).
+  simultânea (ex.: dashboards de operações, salas de controle, ERPs).
 
 ## Como escolher por tipo de produto
 
