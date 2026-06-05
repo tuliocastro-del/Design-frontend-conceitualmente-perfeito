@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local AI-tool settings (keep shared skills, ignore per-machine settings)
+.claude/settings.local.json
+skills/*/settings.local.json
+
+# Session artifacts
+sessao-*.bundle
+*.patch
