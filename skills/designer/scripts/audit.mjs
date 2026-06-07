@@ -36,7 +36,7 @@ const STYLE_EXTS = new Set([".css", ".scss", ".html", ".vue", ".svelte"]);
 const TOKEN_FILE_RE = /^(tailwind\.config\.(js|cjs|mjs|ts)|theme\.(js|ts|jsx|tsx)|(_?tokens|_?variables|theme)\.scss|components\.json|.*tokens.*\.json|design-tokens.*\.(json|js|ts))$/i;
 
 const SEVERITY = { error: "error", warning: "warning", info: "info" };
-const CAT = { slop: "slop", a11y: "a11y" };
+const CAT = { slop: "slop", a11y: "a11y", vars: "vars" };
 
 // Counted regex rules (category "slop"), run against comment-stripped code.
 // weight = points per occurrence; score adds weight × (matches on the line).
@@ -144,12 +144,14 @@ Usage:
   node audit.mjs --format json [paths]   Machine-readable JSON output
   node audit.mjs --fail-on-score <N>     Exit 1 if SLOP SCORE > N (CI gate)
   node audit.mjs --fail-on-a11y          Exit 1 if any accessibility error
+  node audit.mjs --fail-on-undef         Exit 1 if any undefined CSS variable
   node audit.mjs --help                  Show this help
 
 Options:
   --format <text|json>   Output format. Default: text.
   --fail-on-score <N>    Exit code 1 when SLOP SCORE > N. Default: never fail.
   --fail-on-a11y         Exit code 1 when any a11y error is found.
+  --fail-on-undef        Exit code 1 when any var() references an undefined token.
   -h, --help             Show this help and exit.
 
 Severity & score (slop):
@@ -169,6 +171,13 @@ Accessibility (separate category, NOT added to the slop score):
   a11y-img-sem-alt, a11y-onclick-nao-interativo, a11y-foco-sem-visivel,
   a11y-movimento-sem-guard. Surfaced separately; gate them with --fail-on-a11y.
 
+CSS variables (separate category, NOT added to the slop score):
+  var-indefinida — a var(--x) with NO fallback whose --x is never defined (in any
+  scanned CSS :root/theme, or set at runtime via JS setProperty/style key). This
+  catches dangling tokens that silently break layout (e.g. z-index: var(--z-nav)
+  → auto). Fallback forms var(--x, …) are safe and never flagged. PASS your JS
+  files/dirs too so runtime-set vars aren't false positives. Gate with --fail-on-undef.
+
 Slop rules: gradiente-roxo-azul, fonte-generica-unica, padding-colossal,
   sombra-pesada, glassmorphism, texto-gradiente, sombra-empilhada,
   cantos-arredondados-demais, cantos-arredondados-full, container-padrao,
@@ -176,13 +185,14 @@ Slop rules: gradiente-roxo-azul, fonte-generica-unica, padding-colossal,
 `;
 
 function parseArgs(argv) {
-  const opts = { format: "text", failOnScore: null, failOnA11y: false, paths: [], help: false, error: null };
+  const opts = { format: "text", failOnScore: null, failOnA11y: false, failOnUndef: false, paths: [], help: false, error: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "-h" || a === "--help") opts.help = true;
     else if (a === "--format") opts.format = (argv[++i] || "text").toLowerCase();
     else if (a.startsWith("--format=")) opts.format = a.slice(9).toLowerCase();
     else if (a === "--fail-on-a11y") opts.failOnA11y = true;
+    else if (a === "--fail-on-undef") opts.failOnUndef = true;
     else if (a === "--fail-on-score" || a.startsWith("--fail-on-score=")) {
       const raw = a.includes("=") ? a.slice(16) : argv[++i];
       const n = Number(raw);
@@ -224,6 +234,54 @@ function detectTokens(files, tokenHint) {
     } catch { /* ignore */ }
   }
   return false;
+}
+
+/**
+ * Undefined-custom-property pass (category "vars", separate from the slop score).
+ *
+ * Catches the failure that bit this project: a `var(--x)` with NO fallback whose
+ * --x is never defined → resolves to the invalid/initial value and silently
+ * breaks (e.g. z-index: var(--z-nav) → auto, layering collapses).
+ *
+ * Fallback-aware: `var(--x, …)` is safe (degrades) and never flagged.
+ * JS-aware: tokens set at runtime via setProperty('--x', …) or a style-object
+ * key '--x': … (scanned in .js/.jsx/.ts/.tsx) count as defined, so calendar-style
+ * runtime vars don't show up as false positives — PASS the JS files/dirs too.
+ */
+function auditUndefinedVars(files, findings) {
+  const definedCss = new Set();
+  const definedJs = new Set();
+  const styleFiles = [];
+  const JS_EXTS = new Set([".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".html"]);
+  for (const f of files) {
+    const ext = extname(f);
+    let text;
+    try { text = readFileSync(f, "utf8"); } catch { continue; }
+    if (STYLE_EXTS.has(ext)) {
+      for (const m of text.matchAll(/(--[a-zA-Z0-9-]+)\s*:/g)) definedCss.add(m[1]);
+      styleFiles.push({ f, text, ext });
+    }
+    if (JS_EXTS.has(ext)) {
+      for (const m of text.matchAll(/['"`](--[a-zA-Z0-9-]+)['"`]\s*[:\]]/g)) definedJs.add(m[1]); // '--x': / ["--x"]:
+      for (const m of text.matchAll(/setProperty\(\s*['"`](--[a-zA-Z0-9-]+)/g)) definedJs.add(m[1]);
+    }
+  }
+  const defined = new Set([...definedCss, ...definedJs]);
+  for (const { f, text, ext } of styleFiles) {
+    text.split("\n").forEach((line, i) => {
+      const code = stripComments(line, ext);
+      // group 2 is "," (has fallback → safe) or ")" (bare → must be defined).
+      for (const m of code.matchAll(/var\(\s*(--[a-zA-Z0-9-]+)\s*([,)])/g)) {
+        const name = m[1], hasFallback = m[2] === ",";
+        if (!hasFallback && !defined.has(name)) {
+          findings.push({ file: f, line: i + 1, rule: "var-indefinida", category: CAT.vars,
+            severity: SEVERITY.error, weight: 0, count: 1,
+            message: `var(${name}) has no fallback and ${name} is never defined (CSS or JS). Define the token in :root/theme, or add a fallback: var(${name}, …).`,
+            snippet: line.trim().slice(0, 100) });
+        }
+      }
+    });
+  }
 }
 
 function auditFile(f, projectHasTokens, findings) {
@@ -371,9 +429,11 @@ if (!files.length) {
 const projectHasTokens = detectTokens(files, tokenHint);
 const findings = [];
 for (const f of files) auditFile(f, projectHasTokens, findings);
+auditUndefinedVars(files, findings);
 
 const slop = findings.filter((f) => f.category === CAT.slop);
 const a11y = findings.filter((f) => f.category === CAT.a11y);
+const vars = findings.filter((f) => f.category === CAT.vars);
 const score = slop.reduce((s, f) => s + f.weight * f.count, 0);
 
 const sevCounts = (list) => ({
@@ -383,6 +443,7 @@ const sevCounts = (list) => ({
 });
 const summary = { files: files.length, findings: slop.length, ...sevCounts(slop) };
 const a11ySummary = { findings: a11y.length, error: sevCounts(a11y).error, warning: sevCounts(a11y).warning };
+const varsSummary = { findings: vars.length, error: sevCounts(vars).error };
 
 const SEV_RANK = { error: 0, warning: 1, info: 2 };
 const sortFindings = (a, b) =>
@@ -392,6 +453,7 @@ const sortFindings = (a, b) =>
   a.line - b.line;
 slop.sort(sortFindings);
 a11y.sort(sortFindings);
+vars.sort(sortFindings);
 
 function band(s) {
   if (s === 0) return "clean";
@@ -424,8 +486,8 @@ if (opts.format === "json") {
   });
   process.stdout.write(JSON.stringify({
     score, band: band(score), projectHasTokens,
-    summary, a11y: a11ySummary,
-    findings: slop.map(shape), a11yFindings: a11y.map(shape),
+    summary, a11y: a11ySummary, vars: varsSummary,
+    findings: slop.map(shape), a11yFindings: a11y.map(shape), varsFindings: vars.map(shape),
   }, null, 2) + "\n");
 } else {
   const cwd = process.cwd();
@@ -438,13 +500,19 @@ if (opts.format === "json") {
     console.log(`Accessibility — ${a11y.length} finding(s) (separate from the slop score):\n`);
     printGroup(a11y, cwd);
   }
+  if (vars.length) {
+    console.log(`CSS variables — ${vars.length} undefined reference(s) without fallback (separate from the slop score):\n`);
+    printGroup(vars, cwd);
+  }
   console.log(`projectHasTokens: ${projectHasTokens}`);
   console.log(`severity: ${summary.error} error · ${summary.warning} warning · ${summary.info} info`);
   console.log(`a11y: ${a11ySummary.error} error · ${a11ySummary.warning} warning`);
+  console.log(`vars: ${varsSummary.error} undefined (no fallback)`);
   console.log(`SLOP SCORE: ${score}  (${band(score)})`);
 }
 
 let exit = 0;
 if (opts.failOnScore != null && score > opts.failOnScore) exit = 1;
 if (opts.failOnA11y && a11ySummary.error > 0) exit = 1;
+if (opts.failOnUndef && varsSummary.error > 0) exit = 1;
 process.exit(exit);

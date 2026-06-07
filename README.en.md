@@ -83,13 +83,18 @@ node skills/designer/scripts/audit.mjs [files or folders...]   # text
 node skills/designer/scripts/audit.mjs --format json .         # JSON
 node skills/designer/scripts/audit.mjs --fail-on-score 20 .    # CI gate (slop)
 node skills/designer/scripts/audit.mjs --fail-on-a11y .        # CI gate (a11y)
+node skills/designer/scripts/audit.mjs --fail-on-undef .       # CI gate (undefined vars)
 node skills/designer/scripts/audit.mjs --help                  # help
 ```
 
-Beyond aesthetic slop, it runs a deterministic **accessibility** check (a
-**separate** category, not part of the SLOP SCORE): `img` without `alt`,
-`outline:none` without `:focus-visible`, motion without `prefers-reduced-motion`,
-`onClick` on a non-interactive element.
+Beyond aesthetic slop, it runs two deterministic checks in **separate**
+categories (not part of the SLOP SCORE):
+- **Accessibility:** `img` without `alt`, `outline:none` without `:focus-visible`,
+  motion without `prefers-reduced-motion`, `onClick` on a non-interactive element.
+- **Undefined CSS variables:** a `var(--x)` with no fallback whose `--x` is never
+  defined (in CSS or set via JS) — catches orphan tokens that silently break
+  layout (e.g. `z-index: var(--z-nav)` collapsing to `auto`). Pass the JS dirs too
+  so runtime-set vars aren't false positives.
 
 **How to read the score** (`error` > `warning` > `info`):
 
@@ -138,9 +143,10 @@ npm run audit -- .
 
 ## Short roadmap
 
-- **v0.2 (here):** auditor with JSON/severity/`--fail-on-score`, tests, CI,
+- **v0.2:** auditor with JSON/severity/`--fail-on-score`, tests, CI,
   examples, new references.
-- **v0.3:** more before/after examples (dense dashboard, landing, form) and screenshots.
+- **v0.3 (here):** **undefined CSS variable** check (`--fail-on-undef`) as a
+  separate category + tests; more before/after examples and screenshots.
 - **v0.4:** token detection in `theme.ts`/JSON, inline suppressions, multi-model benchmark.
 - **v1.0:** npm package (`npx anti-slop-audit`), GitHub Action and a design-review MCP.
 

@@ -1,0 +1,6 @@
+/* Fixture for the undefined-CSS-variable check (category "vars"). */
+.bug  { z-index: var(--z-nav); }        /* bare + never defined -> flagged */
+.safe { color: var(--accent, #fff); }   /* has fallback -> NOT flagged */
+.jsv  { left: var(--js-set); }           /* set via JS fixture -> NOT flagged */
+.ok   { top: var(--defined-here); }      /* defined below -> NOT flagged */
+:root { --defined-here: 4px; }

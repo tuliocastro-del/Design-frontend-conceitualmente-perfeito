@@ -1,6 +1,6 @@
 {
   "name": "design-frontend-conceitualmente-perfeito",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "AI frontend design quality layer: anti-slop auditor + agent skill to remove generic AI aesthetics, respect the design system and make UI intentional.",

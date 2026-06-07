@@ -83,13 +83,18 @@ node skills/designer/scripts/audit.mjs [arquivos ou pastas...]   # texto
 node skills/designer/scripts/audit.mjs --format json .           # JSON
 node skills/designer/scripts/audit.mjs --fail-on-score 20 .      # gate de CI (slop)
 node skills/designer/scripts/audit.mjs --fail-on-a11y .          # gate de CI (a11y)
+node skills/designer/scripts/audit.mjs --fail-on-undef .         # gate de CI (vars indefinidas)
 node skills/designer/scripts/audit.mjs --help                    # ajuda
 ```
 
-Além do slop estético, ele roda uma checagem de **acessibilidade** determinística
-(categoria **separada**, não entra no SLOP SCORE): `img` sem `alt`, `outline:none`
-sem `:focus-visible`, movimento sem `prefers-reduced-motion`, `onClick` em elemento
-não-interativo.
+Além do slop estético, ele roda duas checagens determinísticas em **categorias
+separadas** (não entram no SLOP SCORE):
+- **Acessibilidade:** `img` sem `alt`, `outline:none` sem `:focus-visible`,
+  movimento sem `prefers-reduced-motion`, `onClick` em elemento não-interativo.
+- **Variáveis CSS indefinidas:** `var(--x)` sem fallback cujo `--x` nunca é
+  definido (no CSS ou setado via JS) — pega tokens órfãos que quebram o layout
+  silenciosamente (ex.: `z-index: var(--z-nav)` virando `auto`). Passe os dirs JS
+  junto para vars de runtime não falsearem.
 
 **Como interpretar o score** (`error` > `warning` > `info`):
 
@@ -137,9 +142,10 @@ npm run audit -- .
 
 ## Roadmap curto
 
-- **v0.2 (aqui):** auditor com JSON/severidade/`--fail-on-score`, testes, CI,
+- **v0.2:** auditor com JSON/severidade/`--fail-on-score`, testes, CI,
   exemplos, novas referências.
-- **v0.3:** mais exemplos antes/depois (dashboard denso, landing, form) e screenshots.
+- **v0.3 (aqui):** checagem de **variáveis CSS indefinidas** (`--fail-on-undef`)
+  como categoria separada + testes; mais exemplos antes/depois e screenshots.
 - **v0.4:** detecção de tokens em `theme.ts`/JSON, supressões inline, benchmark multi-modelo.
 - **v1.0:** pacote npm (`npx anti-slop-audit`), GitHub Action e MCP de design review.
 

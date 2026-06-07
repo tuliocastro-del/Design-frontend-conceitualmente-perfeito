@@ -68,9 +68,14 @@ node skills/designer/scripts/audit.mjs [files...]
 It groups by **severity** (`error` > `warning` > `info`) and gives a `SLOP
 SCORE` (bands: 0 clean · 1–9 minor · 10–24 noticeable · 25+ heavy). `info`
 severity (e.g. `rounded-full` on an avatar) is a note, not an error — it doesn't
-inflate the score. It also runs an **accessibility** check as a **separate**
-category (not part of the SLOP SCORE). Add this to a manual read against
-`references/anti-slop.en.md`. **Record the initial score**: it must drop in phase 5.
+inflate the score. It also runs two **separate** checks (not part of the SLOP
+SCORE): **accessibility** and **undefined CSS variables** (a `var(--x)` with no
+fallback whose `--x` is never defined — which silently breaks stacking/layout,
+e.g. `z-index: var(--z-nav)` collapsing to `auto`). So the var check doesn't
+false-positive runtime-set tokens, **also pass the JS files/dirs** (e.g.
+`node skills/designer/scripts/audit.mjs styles.css index.html src`). Add this to a
+manual read against `references/anti-slop.en.md`. **Record the initial score**: it
+must drop in phase 5.
 
 > `SLOP SCORE: 0` means **no regex-detectable tells remain** — it does not certify
 > the composition (layout, rhythm, information architecture). That is the job of
@@ -121,6 +126,10 @@ identity): see `references/shadcn-tailwind-anti-slop.en.md`.
 - **No accessibility `error` may remain** (img without alt, focus removed without
   `:focus-visible`, etc.) — this is a gate, independent of the SLOP SCORE. In CI:
   `audit.mjs --fail-on-a11y`.
+- **No undefined CSS variable** — every `var(--x)` without a fallback must have
+  `--x` defined (in `:root`/theme or via JS). Tokenizing without defining silently
+  breaks stacking/layout; this gate catches it. In CI: `audit.mjs --fail-on-undef`
+  (passing the JS dirs too).
 - Confirm 4.5:1 contrast on the text pairs you touched.
 - Run whatever the project defines (`npm test`, `npm run build`, smoke) before
   considering it done. No new console regression.
@@ -173,6 +182,7 @@ The task is complete only when **all** hold:
 - [ ] Reconnaissance done: you know which tokens/fonts/themes the project uses.
 - [ ] Final `SLOP SCORE` **lower** than the initial one (ideally no `error`).
 - [ ] **Zero accessibility `error`** in the auditor (`--fail-on-a11y` passes).
+- [ ] **Zero undefined CSS variable** in the auditor (`--fail-on-undef` passes, with the JS dirs included).
 - [ ] Every new color/radius/space came from a project token (no loose hex).
 - [ ] Contrast ≥ 4.5:1 on touched text; visible focus; complete states.
 - [ ] Project tests/build pass, with no new console regression.
@@ -186,4 +196,4 @@ The task is complete only when **all** hold:
 - `references/shadcn-tailwind-anti-slop.en.md` — pitfalls in Tailwind/shadcn/CSS-modules.
 - `references/accessibility-checklist.en.md` — contrast, focus, keyboard, motion, semantics.
 - `references/ai-builder-benchmark.en.md` — post-generation flow per tool (Bolt, Lovable, etc.).
-- `scripts/audit.mjs` — deterministic slop auditor (file + line + severity + score; `--format json`, `--fail-on-score`).
+- `scripts/audit.mjs` — deterministic auditor: slop (score) + accessibility + undefined CSS variables, each by file + line + severity. Flags: `--format json`, `--fail-on-score`, `--fail-on-a11y`, `--fail-on-undef`.

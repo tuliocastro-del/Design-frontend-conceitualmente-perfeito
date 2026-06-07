@@ -195,6 +195,22 @@ test("--fail-on-a11y gates on accessibility errors", () => {
   assert.equal(run("--fail-on-a11y", fixture("clean.css")).status, 0);
 });
 
+// --- undefined CSS variables (separate category, not in the slop score) -----
+
+test("undefined var() without fallback is flagged; fallback/JS-set/defined are not", () => {
+  const { json } = runJson(fixture("undefined-vars.css"), fixture("undefined-vars.js"));
+  assert.equal(json.score, 0); // undefined vars must not inflate the aesthetic score
+  assert.equal(json.varsFindings.length, 1, `expected exactly 1 undefined var, got ${json.varsFindings.length}`);
+  assert.equal(json.varsFindings[0].rule, "var-indefinida");
+  assert.ok(json.varsFindings[0].snippet.includes("--z-nav"), "should point at the bare undefined var");
+  assert.ok(json.vars.error >= 1);
+});
+
+test("--fail-on-undef gates on undefined variables", () => {
+  assert.equal(run("--fail-on-undef", fixture("undefined-vars.css"), fixture("undefined-vars.js")).status, 1);
+  assert.equal(run("--fail-on-undef", fixture("clean.css")).status, 0);
+});
+
 // --- CLI robustness --------------------------------------------------------
 
 test("--fail-on-score with a non-number errors out (exit 2)", () => {
